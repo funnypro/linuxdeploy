@@ -1,43 +1,42 @@
-<?xml version="1.0" encoding="utf-8"?>
 <resources>
 
-    <string-array name="language_entries" translatable="false">
-        <item>English</item>
-        <item>Русский</item>
-        <item>Deutsch</item>
-        <item>Français</item>
-        <item>Italiano</item>
-        <item>Español</item>
-        <item>简体中文</item>
-        <item>Tiếng Việt</item>
-        <item>Slovenský</item>
-        <item>Português</item>
-        <item>한국어</item>
-        <item>Polish</item>
-        <item>Bahasa Indonesia</item>
-    </string-array>
     <string-array name="language_values" translatable="false">
-        <item>en</item>
-        <item>ru</item>
         <item>de</item>
-        <item>fr</item>
-        <item>it</item>
+        <item>en</item>
         <item>es</item>
-        <item>zh</item>
-        <item>vi</item>
-        <item>sk</item>
-        <item>pt</item>
+        <item>fr</item>
+        <item>in</item>
+        <item>it</item>
         <item>ko</item>
         <item>pl</item>
-        <item>in</item>
+        <item>pt</item>
+        <item>ru</item>
+        <item>sk</item>
+        <item>vi</item>
+        <item>zh</item>
     </string-array>
-    <string-array name="theme_entries">
-        <item>Dark</item>
-        <item>Light</item>
+    <string-array name="language_entries" translatable="false">
+        <item>Deutsch</item>
+        <item>English</item>
+        <item>Español</item>
+        <item>Français</item>
+        <item>Bahasa Indonesia</item>
+        <item>Italiano</item>
+        <item>한국어</item>
+        <item>Polish</item>
+        <item>Português</item>
+        <item>Русский</item>
+        <item>Slovenský</item>
+        <item>Tiếng Việt</item>
+        <item>简体中文</item>
     </string-array>
     <string-array name="theme_values" translatable="false">
         <item>dark</item>
         <item>light</item>
+    </string-array>
+    <string-array name="theme_entries">
+        <item>Dark</item>
+        <item>Light</item>
     </string-array>
     <string-array name="target_type_values" translatable="false">
         <item>file</item>
@@ -54,13 +53,6 @@
         <item>Custom</item>
     </string-array>
     <string-array name="fs_type_values" translatable="false">
-        <item>auto</item>
-        <item>ext2</item>
-        <item>ext3</item>
-        <item>ext4</item>
-    </string-array>
-    <string-array name="fs_type_entries">
-        <item>Auto</item>
         <item>ext2</item>
         <item>ext3</item>
         <item>ext4</item>
@@ -244,7 +236,6 @@
         <item>centos</item>
         <item>archlinux</item>
         <item>gentoo</item>
-        <item>opensuse</item>
         <item>slackware</item>
         <item>rootfs</item>
     </string-array>
@@ -256,7 +247,6 @@
         <item>CentOS</item>
         <item>Arch Linux</item>
         <item>Gentoo</item>
-        <item>openSUSE</item>
         <item>Slackware</item>
         <item>RootFS</item>
     </string-array>
@@ -288,7 +278,7 @@
         <item>Pause</item>
         <item>Stop</item>
     </string-array>
-    
+
 
     <!-- Debian -->
 
@@ -314,7 +304,7 @@
         <item>precise</item>
         <item>trusty</item>
         <item>xenial</item>
-        <item>devel</item>
+        <item>bionic</item>
     </string-array>
     <string-array name="ubuntu_arch_values" translatable="false">
         <item>armel</item> <!-- precise only -->
@@ -332,7 +322,7 @@
     <string-array name="kalilinux_arch_values" translatable="false">
         <item>armel</item>
         <item>armhf</item>
-        <item>arm64</item> <!-- kali-rolling only -->
+        <item>arm64</item>
         <item>i386</item>
         <item>amd64</item>
     </string-array>
@@ -340,9 +330,7 @@
     <!-- Fedora -->
 
     <string-array name="fedora_suite_values" translatable="false">
-        <item>23</item>
-        <item>24</item>
-        <item>25</item>
+        <item>28</item>
     </string-array>
     <string-array name="fedora_arch_values" translatable="false">
         <item>armhfp</item> <!-- f19 and later -->
@@ -374,20 +362,6 @@
         <item>armv7h</item>
         <item>aarch64</item>
         <item>i686</item>
-        <item>x86_64</item>
-    </string-array>
-
-    <!-- openSUSE -->
-
-    <string-array name="opensuse_suite_values" translatable="false">
-        <item>12.3</item>
-        <item>13.2</item>
-    </string-array>
-    <string-array name="opensuse_arch_values" translatable="false">
-        <item>armv6hl</item>
-        <item>armv7hl</item>
-        <item>aarch64</item>
-        <item>i586</item>
         <item>x86_64</item>
     </string-array>
 

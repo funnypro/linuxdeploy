@@ -1,26 +1,16 @@
 package ru.meefik.linuxdeploy;
 
 import android.Manifest;
-import android.content.Context;
-import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.content.res.Configuration;
+import android.graphics.Color;
+import android.net.Uri;
 import android.net.wifi.WifiManager;
 import android.net.wifi.WifiManager.WifiLock;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.PowerManager;
-import android.support.annotation.NonNull;
-import android.support.design.widget.NavigationView;
-import android.support.v4.app.ActivityCompat;
-import android.support.v4.content.ContextCompat;
-import android.support.v4.view.GravityCompat;
-import android.support.v4.widget.DrawerLayout;
-import android.support.v7.app.ActionBar;
-import android.support.v7.app.ActionBarDrawerToggle;
-import android.support.v7.app.AlertDialog;
-import android.support.v7.app.AppCompatActivity;
 import android.text.method.LinkMovementMethod;
 import android.util.TypedValue;
 import android.view.Menu;
@@ -32,14 +22,45 @@ import android.widget.ScrollView;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import com.google.android.material.navigation.NavigationView;
+
+import androidx.annotation.NonNull;
+import androidx.appcompat.app.ActionBar;
+import androidx.appcompat.app.ActionBarDrawerToggle;
+import androidx.appcompat.app.AlertDialog;
+import androidx.appcompat.app.AppCompatActivity;
+import androidx.browser.customtabs.CustomTabsIntent;
+import androidx.core.app.ActivityCompat;
+import androidx.core.content.ContextCompat;
+import androidx.core.view.GravityCompat;
+import androidx.drawerlayout.widget.DrawerLayout;
+
 public class MainActivity extends AppCompatActivity implements
         NavigationView.OnNavigationItemSelectedListener {
 
+    private static final int REQUEST_WRITE_STORAGE = 112;
     private static TextView output;
     private static ScrollView scroll;
     private static WifiLock wifiLock;
     private static PowerManager.WakeLock wakeLock;
-    private static final int REQUEST_WRITE_STORAGE = 112;
+
+    /**
+     * Show message in TextView, used from Logger
+     *
+     * @param log message
+     */
+    public static void showLog(final String log) {
+        if (output == null || scroll == null) return;
+        // show log in TextView
+        output.post(() -> {
+            output.setText(log);
+            // scroll TextView to bottom
+            scroll.post(() -> {
+                scroll.fullScroll(View.FOCUS_DOWN);
+                scroll.clearFocus();
+            });
+        });
+    }
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
@@ -50,22 +71,22 @@ public class MainActivity extends AppCompatActivity implements
         ActionBar actionBar = getSupportActionBar();
         actionBar.setDisplayHomeAsUpEnabled(true);
 
-        DrawerLayout drawer = (DrawerLayout) findViewById(R.id.drawer_layout);
+        DrawerLayout drawer = findViewById(R.id.drawer_layout);
         ActionBarDrawerToggle toggle = new ActionBarDrawerToggle(
                 this, drawer, R.string.navigation_drawer_open, R.string.navigation_drawer_close);
-        drawer.setDrawerListener(toggle);
+        drawer.addDrawerListener(toggle);
         toggle.syncState();
 
-        NavigationView navigationView = (NavigationView) findViewById(R.id.nav_view);
+        NavigationView navigationView = findViewById(R.id.nav_view);
         navigationView.setNavigationItemSelectedListener(this);
 
-        output = (TextView) findViewById(R.id.outputView);
-        scroll = (ScrollView) findViewById(R.id.scrollView);
+        output = findViewById(R.id.outputView);
+        scroll = findViewById(R.id.scrollView);
 
         output.setMovementMethod(LinkMovementMethod.getInstance());
 
         // WiFi lock init
-        WifiManager wifiManager = (WifiManager) getApplicationContext().getSystemService(Context.WIFI_SERVICE);
+        WifiManager wifiManager = (WifiManager) getApplicationContext().getSystemService(android.content.Context.WIFI_SERVICE);
         wifiLock = wifiManager.createWifiLock(WifiManager.WIFI_MODE_FULL, getPackageName());
 
         // Wake lock
@@ -73,10 +94,8 @@ public class MainActivity extends AppCompatActivity implements
         wakeLock = powerManager.newWakeLock(PowerManager.PARTIAL_WAKE_LOCK, getPackageName());
 
         if (EnvUtils.isLatestVersion(this)) {
-            // start telnetd
-            EnvUtils.execService(getBaseContext(), "telnetd", "start");
-            // start httpd
-            EnvUtils.execService(getBaseContext(), "httpd", "start");
+            // start services
+            EnvUtils.execServices(getBaseContext(), new String[]{"telnetd", "httpd"}, "start");
         } else {
             // Update ENV
             new UpdateEnvTask(this).execute();
@@ -128,7 +147,7 @@ public class MainActivity extends AppCompatActivity implements
                 clearLog();
                 break;
             case android.R.id.home:
-                DrawerLayout drawer = (DrawerLayout) findViewById(R.id.drawer_layout);
+                DrawerLayout drawer = findViewById(R.id.drawer_layout);
                 if (drawer.isDrawerOpen(GravityCompat.START)) {
                     drawer.closeDrawer(GravityCompat.START);
                 } else {
@@ -143,7 +162,7 @@ public class MainActivity extends AppCompatActivity implements
 
     @Override
     public void onBackPressed() {
-        DrawerLayout drawer = (DrawerLayout) findViewById(R.id.drawer_layout);
+        DrawerLayout drawer = findViewById(R.id.drawer_layout);
         if (drawer.isDrawerOpen(GravityCompat.START)) {
             drawer.closeDrawer(GravityCompat.START);
         } else {
@@ -151,7 +170,6 @@ public class MainActivity extends AppCompatActivity implements
         }
     }
 
-    @SuppressWarnings("StatementWithEmptyBody")
     @Override
     public boolean onNavigationItemSelected(MenuItem item) {
         switch (item.getItemId()) {
@@ -163,7 +181,18 @@ public class MainActivity extends AppCompatActivity implements
                 openRepository();
                 break;
             case R.id.nav_terminal:
-                openTerminal();
+                String uri = "http://127.0.0.1:" + PrefStore.getHttpPort(this) +
+                        "/cgi-bin/terminal?size=" + PrefStore.getFontSize(this);
+                // Intent browserIntent = new Intent(Intent.ACTION_VIEW, Uri.parse(uri));
+                // startActivity(browserIntent);
+                CustomTabsIntent.Builder builder = new CustomTabsIntent.Builder();
+                if (PrefStore.getTheme(this) == R.style.LightTheme) {
+                    builder.setToolbarColor(Color.LTGRAY);
+                } else {
+                    builder.setToolbarColor(Color.DKGRAY);
+                }
+                CustomTabsIntent customTabsIntent = builder.build();
+                customTabsIntent.launchUrl(this, Uri.parse(uri));
                 break;
             case R.id.nav_settings:
                 Intent intent_settings = new Intent(this, SettingsActivity.class);
@@ -176,13 +205,12 @@ public class MainActivity extends AppCompatActivity implements
             case R.id.nav_exit:
                 if (wifiLock.isHeld()) wifiLock.release();
                 if (wakeLock.isHeld()) wakeLock.release();
-                EnvUtils.execService(getBaseContext(), "telnetd", "stop");
-                EnvUtils.execService(getBaseContext(), "httpd", "stop");
+                EnvUtils.execServices(getBaseContext(), new String[]{"telnetd", "httpd"}, "stop");
                 PrefStore.hideNotification(getBaseContext());
                 finish();
                 break;
         }
-        DrawerLayout drawer = (DrawerLayout) findViewById(R.id.drawer_layout);
+        DrawerLayout drawer = findViewById(R.id.drawer_layout);
         drawer.closeDrawer(GravityCompat.START);
         return true;
     }
@@ -214,42 +242,16 @@ public class MainActivity extends AppCompatActivity implements
         // WiFi lock
         if (PrefStore.isWifiLock(this)) {
             if (!wifiLock.isHeld()) wifiLock.acquire();
-        }
-        else {
+        } else {
             if (wifiLock.isHeld()) wifiLock.release();
         }
 
         // Wake lock
         if (PrefStore.isWakeLock(this)) {
             if (!wakeLock.isHeld()) wakeLock.acquire();
-        }
-        else {
+        } else {
             if (wakeLock.isHeld()) wakeLock.release();
         }
-    }
-
-    /**
-     * Show message in TextView, used from Logger
-     *
-     * @param log message
-     */
-    public static void showLog(final String log) {
-        if (output == null || scroll == null) return;
-        // show log in TextView
-        output.post(new Runnable() {
-            @Override
-            public void run() {
-                output.setText(log);
-                // scroll TextView to bottom
-                scroll.post(new Runnable() {
-                    @Override
-                    public void run() {
-                        scroll.fullScroll(View.FOCUS_DOWN);
-                        scroll.clearFocus();
-                    }
-                });
-            }
-        });
     }
 
     /**
@@ -271,42 +273,27 @@ public class MainActivity extends AppCompatActivity implements
                 .setIcon(android.R.drawable.ic_dialog_alert)
                 .setCancelable(false)
                 .setPositiveButton(android.R.string.yes,
-                        new DialogInterface.OnClickListener() {
-                            @Override
-                            public void onClick(DialogInterface dialog, int id) {
-                                // actions
-                                Handler h = new Handler();
-                                if (PrefStore.isXserver(getApplicationContext())
-                                        && PrefStore.isXsdl(getApplicationContext())) {
-                                    PackageManager pm = getPackageManager();
-                                    Intent intent = pm.getLaunchIntentForPackage("x.org.server");
-                                    if (intent != null) startActivity(intent);
-                                    h.postDelayed(new Runnable() {
-                                        public void run() {
-                                            EnvUtils.execService(getBaseContext(), "start", "-m");
-                                        }
-                                    }, PrefStore.getXsdlDelay(getApplicationContext()));
-                                } else if (PrefStore.isFramebuffer(getApplicationContext())) {
-                                    EnvUtils.execService(getBaseContext(), "start", "-m");
-                                    h.postDelayed(new Runnable() {
-                                        public void run() {
-                                            Intent intent = new Intent(getApplicationContext(),
-                                                    FullscreenActivity.class);
-                                            startActivity(intent);
-                                        }
-                                    }, 1500);
-                                } else {
-                                    EnvUtils.execService(getBaseContext(), "start", "-m");
-                                }
+                        (dialog, id) -> {
+                            // actions
+                            Handler h = new Handler();
+                            if (PrefStore.isXserver(getApplicationContext())
+                                    && PrefStore.isXsdl(getApplicationContext())) {
+                                PackageManager pm = getPackageManager();
+                                Intent intent = pm.getLaunchIntentForPackage("x.org.server");
+                                if (intent != null) startActivity(intent);
+                                h.postDelayed(() -> EnvUtils.execService(getBaseContext(), "start", "-m"), PrefStore.getXsdlDelay(getApplicationContext()));
+                            } else if (PrefStore.isFramebuffer(getApplicationContext())) {
+                                EnvUtils.execService(getBaseContext(), "start", "-m");
+                                h.postDelayed(() -> {
+                                    Intent intent = new Intent(getApplicationContext(),
+                                            FullscreenActivity.class);
+                                    startActivity(intent);
+                                }, 1500);
+                            } else {
+                                EnvUtils.execService(getBaseContext(), "start", "-m");
                             }
                         }).setNegativeButton(android.R.string.no,
-                new DialogInterface.OnClickListener() {
-                    @Override
-                    public void onClick(DialogInterface dialog,
-                                        int id) {
-                        dialog.cancel();
-                    }
-                }).show();
+                (dialog, id) -> dialog.cancel()).show();
     }
 
     /**
@@ -320,18 +307,8 @@ public class MainActivity extends AppCompatActivity implements
                 .setIcon(android.R.drawable.ic_dialog_alert)
                 .setCancelable(false)
                 .setPositiveButton(android.R.string.yes,
-                        new DialogInterface.OnClickListener() {
-                            @Override
-                            public void onClick(DialogInterface dialog, int id) {
-                                EnvUtils.execService(getBaseContext(), "stop", "-u");
-                            }
-                        }).setNegativeButton(android.R.string.no,
-                new DialogInterface.OnClickListener() {
-                    @Override
-                    public void onClick(DialogInterface dialog, int id) {
-                        dialog.cancel();
-                    }
-                }).show();
+                        (dialog, id) -> EnvUtils.execService(getBaseContext(), "stop", "-u")).setNegativeButton(android.R.string.no,
+                (dialog, id) -> dialog.cancel()).show();
     }
 
     /**
@@ -354,19 +331,9 @@ public class MainActivity extends AppCompatActivity implements
                 .setMessage(R.string.message_install_dialog)
                 .setCancelable(false)
                 .setPositiveButton(android.R.string.yes,
-                        new DialogInterface.OnClickListener() {
-                            @Override
-                            public void onClick(DialogInterface dialog, int id) {
-                                EnvUtils.execService(getBaseContext(), "deploy", null);
-                            }
-                        })
+                        (dialog, id) -> EnvUtils.execService(getApplicationContext(), "deploy", null))
                 .setNegativeButton(android.R.string.no,
-                        new DialogInterface.OnClickListener() {
-                            @Override
-                            public void onClick(DialogInterface dialog, int id) {
-                                dialog.cancel();
-                            }
-                        }).show();
+                        (dialog, id) -> dialog.cancel()).show();
     }
 
     /**
@@ -378,19 +345,9 @@ public class MainActivity extends AppCompatActivity implements
                 .setMessage(R.string.message_configure_dialog)
                 .setCancelable(false)
                 .setPositiveButton(android.R.string.yes,
-                        new DialogInterface.OnClickListener() {
-                            @Override
-                            public void onClick(DialogInterface dialog, int id) {
-                                EnvUtils.execService(getBaseContext(), "deploy", "-m -n bootstrap");
-                            }
-                        })
+                        (dialog, id) -> EnvUtils.execService(getBaseContext(), "deploy", "-m -n bootstrap"))
                 .setNegativeButton(android.R.string.no,
-                        new DialogInterface.OnClickListener() {
-                            @Override
-                            public void onClick(DialogInterface dialog, int id) {
-                                dialog.cancel();
-                            }
-                        }).show();
+                        (dialog, id) -> dialog.cancel()).show();
     }
 
     /**
@@ -403,21 +360,11 @@ public class MainActivity extends AppCompatActivity implements
         new AlertDialog.Builder(this)
                 .setTitle(R.string.title_export_dialog)
                 .setCancelable(false)
-                .setView(input, 16, 32, 16, 0)
+                .setView(input)
                 .setPositiveButton(android.R.string.yes,
-                        new DialogInterface.OnClickListener() {
-                            @Override
-                            public void onClick(DialogInterface dialog, int id) {
-                                EnvUtils.execService(getBaseContext(), "export", input.getText().toString());
-                            }
-                        })
+                        (dialog, id) -> EnvUtils.execService(getBaseContext(), "export", input.getText().toString()))
                 .setNegativeButton(android.R.string.no,
-                        new DialogInterface.OnClickListener() {
-                            @Override
-                            public void onClick(DialogInterface dialog, int id) {
-                                dialog.cancel();
-                            }
-                        }).show();
+                        (dialog, id) -> dialog.cancel()).show();
     }
 
     /**
@@ -433,21 +380,6 @@ public class MainActivity extends AppCompatActivity implements
     private void openRepository() {
         Intent intent = new Intent(this, RepositoryActivity.class);
         startActivity(intent);
-    }
-
-    /**
-     * Open terminal action
-     */
-    private void openTerminal() {
-        try {
-            Intent intent_terminal = new Intent("jackpal.androidterm.RUN_SCRIPT");
-            intent_terminal.addCategory(Intent.CATEGORY_DEFAULT);
-            intent_terminal.putExtra("jackpal.androidterm.iInitialCommand",
-                    PrefStore.getTerminalCmd(this));
-            startActivity(intent_terminal);
-        } catch(Exception e) {
-            Toast.makeText(this, R.string.toast_terminal_error, Toast.LENGTH_SHORT).show();
-        }
     }
 
     /**
@@ -477,5 +409,4 @@ public class MainActivity extends AppCompatActivity implements
             }
         }
     }
-
 }

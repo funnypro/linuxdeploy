@@ -1,6 +1,5 @@
-<?xml version="1.0" encoding="utf-8"?>
 <resources>
-  
+
     <string-array name="theme_entries">
         <item>Oscuro</item>
         <item>Claro</item>
@@ -11,12 +10,6 @@
         <item>Partición</item>
         <item>RAM</item>
         <item>Custom</item>
-    </string-array>
-    <string-array name="fs_type_entries">
-        <item>Auto</item>
-        <item>ext2</item>
-        <item>ext3</item>
-        <item>ext4</item>
     </string-array>
     <string-array name="desktop_entries">
         <item>XTerm</item>
@@ -30,5 +23,5 @@
         <item>Pausa</item>
         <item>Parar</item>
     </string-array>
-    
+
 </resources>

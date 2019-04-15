@@ -1,17 +1,11 @@
 package ru.meefik.linuxdeploy;
 
-import android.annotation.SuppressLint;
 import android.app.NotificationManager;
 import android.app.PendingIntent;
 import android.content.Context;
 import android.content.Intent;
-import android.content.pm.PackageInfo;
-import android.content.pm.PackageManager;
 import android.content.res.Configuration;
 import android.graphics.Point;
-import android.os.Build;
-import android.support.v4.app.NotificationCompat;
-import android.support.v4.app.TaskStackBuilder;
 import android.text.TextUtils;
 import android.view.Display;
 import android.view.WindowManager;
@@ -27,6 +21,11 @@ import java.util.Enumeration;
 import java.util.List;
 import java.util.Locale;
 
+import androidx.core.app.NotificationCompat;
+import androidx.core.app.TaskStackBuilder;
+
+import static ru.meefik.linuxdeploy.App.SERVICE_CHANNEL_ID;
+
 public class PrefStore {
 
     private final static SettingsStore SETTINGS = new SettingsStore();
@@ -40,35 +39,20 @@ public class PrefStore {
      * @return version, format versionName-versionCode
      */
     static String getVersion(Context c) {
-        String version = "";
-        try {
-            PackageInfo pi = c.getPackageManager().getPackageInfo(c.getPackageName(), 0);
-            version = pi.versionName + "-" + pi.versionCode;
-        } catch (PackageManager.NameNotFoundException e) {
-            e.printStackTrace();
-        }
-        return version;
-    }
-
-    /**
-     * Get data directory
-     *
-     * @param c context
-     * @return path, e.g. /data/data/package
-     */
-    static String getDataDir(Context c) {
-        return c.getApplicationInfo().dataDir;
+        return BuildConfig.VERSION_NAME + "-" + BuildConfig.VERSION_CODE;
     }
 
     /**
      * Get environment directory
      *
      * @param c context
-     * @return path, e.g. /data/data/package/files/env
+     * @return path, e.g. /data/data/package/files
      */
     static String getEnvDir(Context c) {
         String envDir = SETTINGS.get(c, "env_dir");
-        if (envDir.isEmpty()) envDir = getDataDir(c) + "/env";
+        if (envDir.isEmpty()) {
+            envDir = c.getFilesDir().getAbsolutePath();
+        }
         return envDir;
     }
 
@@ -86,40 +70,30 @@ public class PrefStore {
      * Get bin directory
      *
      * @param c context
-     * @return path, e.g. /data/data/package/bin
+     * @return path, e.g. ${ENV_DIR}/bin
      */
     static String getBinDir(Context c) {
-        return getDataDir(c) + "/bin";
+        return getEnvDir(c) + "/bin";
     }
 
     /**
      * Get tmp directory
      *
      * @param c context
-     * @return path, e.g. /data/data/package/tmp
+     * @return path, e.g. ${ENV_DIR}/tmp
      */
     static String getTmpDir(Context c) {
-        return getDataDir(c) + "/tmp";
+        return getEnvDir(c) + "/tmp";
     }
 
     /**
      * Get web directory
      *
      * @param c context
-     * @return path, e.g. /data/data/package/web
+     * @return path, e.g. ${ENV_DIR}/web
      */
     static String getWebDir(Context c) {
-        return getDataDir(c) + "/web";
-    }
-
-    /**
-     * Get httpd.conf file
-     *
-     * @param c context
-     * @return path of httpd.conf
-     */
-    static File getHttpConfFile(Context c) {
-        return new File(getWebDir(c) + "/httpd.conf");
+        return getEnvDir(c) + "/web";
     }
 
     /**
@@ -204,6 +178,7 @@ public class PrefStore {
                 case "de":
                 case "es":
                 case "fr":
+                case "in":
                 case "it":
                 case "ko":
                 case "pl":
@@ -249,7 +224,7 @@ public class PrefStore {
      * @return font size
      */
     static int getFontSize(Context c) {
-        Integer fontSizeInt;
+        int fontSizeInt;
         String fontSize = SETTINGS.get(c, "fontsize");
         try {
             fontSizeInt = Integer.parseInt(fontSize);
@@ -268,7 +243,7 @@ public class PrefStore {
      * @return number of lines
      */
     static int getMaxLines(Context c) {
-        Integer maxLinesInt;
+        int maxLinesInt;
         String maxLines = SETTINGS.get(c, "maxlines");
         try {
             maxLinesInt = Integer.parseInt(maxLines);
@@ -379,9 +354,9 @@ public class PrefStore {
      * @return Auto start delay in seconds
      */
     static Integer getAutostartDelay(Context c) {
-        try{
+        try {
             return Integer.parseInt(SETTINGS.get(c, "autostart_delay"));
-        }catch(Exception e){
+        } catch (Exception e) {
             return 0;
         }
     }
@@ -416,25 +391,14 @@ public class PrefStore {
         return SETTINGS.get(c, "stealth").equals("true");
     }
 
-
-    /**
-     * Get terminal command
-     *
-     * @param c context
-     * @return command
-     */
-    static String getTerminalCmd(Context c) {
-        return SETTINGS.get(c, "terminalcmd");
-    }
-
     /**
      * Get PATH variable
      *
      * @param c context
-     * @return path, e.g. /data/data/package/files/bin
+     * @return path, e.g. ${ENV_DIR}/bin
      */
     static String getPath(Context c) {
-        String binDir = getDataDir(c) + "/bin";
+        String binDir = getBinDir(c);
         String path = SETTINGS.get(c, "path");
         if (path.isEmpty()) path = binDir;
         else path = path + ":" + binDir;
@@ -588,7 +552,7 @@ public class PrefStore {
      * @return delay in ms
      */
     static int getXsdlDelay(Context c) {
-        Integer deplayInt;
+        int deplayInt;
         String delay = PROPERTIES.get(c, "x11_sdl_delay");
         try {
             deplayInt = Integer.parseInt(delay);
@@ -658,7 +622,6 @@ public class PrefStore {
         config.locale = locale;
         c.getResources().updateConfiguration(config, c.getResources().getDisplayMetrics());
     }
-
 
     /**
      * Load list of mount points
@@ -735,18 +698,13 @@ public class PrefStore {
      * @param c context
      * @return screen width
      */
-    @SuppressLint("NewApi")
     static Integer getScreenWidth(Context c) {
-        int width = 0;
+        int width;
         WindowManager wm = (WindowManager) c.getSystemService(Context.WINDOW_SERVICE);
         Display display = wm.getDefaultDisplay();
-        if (Build.VERSION.SDK_INT > 12) {
-            Point size = new Point();
-            display.getSize(size);
-            width = size.x;
-        } else {
-            width = display.getWidth(); // deprecated
-        }
+        Point size = new Point();
+        display.getSize(size);
+        width = size.x;
         return width;
     }
 
@@ -756,18 +714,13 @@ public class PrefStore {
      * @param c context
      * @return screen height
      */
-    @SuppressLint("NewApi")
     static Integer getScreenHeight(Context c) {
-        int height = 0;
+        int height;
         WindowManager wm = (WindowManager) c.getSystemService(Context.WINDOW_SERVICE);
         Display display = wm.getDefaultDisplay();
-        if (Build.VERSION.SDK_INT > 12) {
-            Point size = new Point();
-            display.getSize(size);
-            height = size.y;
-        } else {
-            height = display.getHeight(); // deprecated
-        }
+        Point size = new Point();
+        display.getSize(size);
+        height = size.y;
         return height;
     }
 
@@ -823,20 +776,40 @@ public class PrefStore {
                 .getSystemService(Context.NOTIFICATION_SERVICE);
         if (isNotification(context)) {
             setLocale(context);
-            NotificationCompat.Builder mBuilder = new NotificationCompat.Builder(context)
+            NotificationCompat.Builder mBuilder = new NotificationCompat.Builder(context, SERVICE_CHANNEL_ID)
                     .setSmallIcon(R.mipmap.ic_launcher)
                     .setContentTitle(context.getString(R.string.app_name))
                     .setContentText(context.getString(R.string.notification_current_profile)
                             + ": " + getProfileName(context));
-            if (!isStealth(context)) {
+
+            if (isStealth(context)) {
+                Intent stealthReceive = new Intent();
+                stealthReceive.setAction("ru.meefik.linuxdeploy.BROADCAST_ACTION");
+                stealthReceive.putExtra("show", true);
+                PendingIntent pendingIntentStealth = PendingIntent.getBroadcast(context, 2, stealthReceive, PendingIntent.FLAG_UPDATE_CURRENT);
+                mBuilder.setContentIntent(pendingIntentStealth);
+            } else {
                 Intent resultIntent = intent;
                 if (resultIntent == null) resultIntent = new Intent(context, MainActivity.class);
                 TaskStackBuilder stackBuilder = TaskStackBuilder.create(context);
                 stackBuilder.addParentStack(MainActivity.class);
                 stackBuilder.addNextIntent(resultIntent);
-                PendingIntent resultPendingIntent = stackBuilder.getPendingIntent(
-                        0, PendingIntent.FLAG_UPDATE_CURRENT);
+                PendingIntent resultPendingIntent = stackBuilder.getPendingIntent(1, PendingIntent.FLAG_UPDATE_CURRENT);
                 mBuilder.setContentIntent(resultPendingIntent);
+
+                Intent startReceive = new Intent();
+                startReceive.setAction("ru.meefik.linuxdeploy.BROADCAST_ACTION");
+                startReceive.putExtra("start", true);
+                PendingIntent pendingIntentStart = PendingIntent.getBroadcast(context, 3, startReceive, PendingIntent.FLAG_UPDATE_CURRENT);
+                int startIcon = SETTINGS.get(context, "theme").equals("dark") ? R.drawable.ic_action_start_dark : R.drawable.ic_action_start_light;
+                mBuilder.addAction(startIcon, context.getString(R.string.menu_start), pendingIntentStart);
+
+                Intent stopReceive = new Intent();
+                stopReceive.setAction("ru.meefik.linuxdeploy.BROADCAST_ACTION");
+                stopReceive.putExtra("stop", true);
+                PendingIntent pendingIntentStop = PendingIntent.getBroadcast(context, 4, stopReceive, PendingIntent.FLAG_UPDATE_CURRENT);
+                int stopIcon = SETTINGS.get(context, "theme").equals("dark") ? R.drawable.ic_action_stop_dark : R.drawable.ic_action_stop_light;
+                mBuilder.addAction(stopIcon, context.getString(R.string.menu_stop), pendingIntentStop);
             }
             mBuilder.setOngoing(true);
             mBuilder.setWhen(0);
@@ -856,5 +829,4 @@ public class PrefStore {
                 .getSystemService(Context.NOTIFICATION_SERVICE);
         mNotificationManager.cancel(NOTIFY_ID);
     }
-
 }

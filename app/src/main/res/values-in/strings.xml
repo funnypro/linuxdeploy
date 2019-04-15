@@ -45,7 +45,6 @@
     <string name="toast_import_profile_error">"Kesalahan mengimpor profil!"</string>
     <string name="toast_export_profile_success">"Profil telah berhasil diekspor."</string>
     <string name="toast_export_profile_error">"Kesalahan mengekspor profil!"</string>
-    <string name="toast_terminal_error">"Kesalahan saat memulai terminal!"</string>
     <string name="toast_loading_error">"Terjadi kesalahan saat memuat data!"</string>
     <string name="toast_updating_env_error">"Kesalahan memperbarui lingkungan pengoperasian!"</string>
     <string name="confirm_profile_discard_title">"Hapus profil"</string>
@@ -88,8 +87,6 @@
     <string name="dialog_title_autostart_delay_preference">"Tunda (detik)"</string>
     <string name="title_nettrack_preference">"Pemicu jaringan"</string>
     <string name="summary_nettrack_preference">"Melacak perubahan jaringan dan memperbarui container"</string>
-    <string name="title_terminalcmd_preference">"Perintah terminal"</string>
-    <string name="dialog_title_terminalcmd_preference">"Perintah terminal"</string>
 
     <string name="env_preferences">"Environment"</string>
 
@@ -100,8 +97,6 @@
     <string name="title_path_preference">"Variabel PATH"</string>
     <string name="dialog_title_path_preference">"Variabel PATH"</string>
 
-    <string name="title_is_sync_preference">"Sinkronisasi"</string>
-    <string name="summary_is_sync_preference">"Sinkronisasi ENV dengan server"</string>
     <!-- SERVER_URL -->
     <string name="title_server_url_preference">"URL server"</string>
     <string name="dialog_title_server_url_preference">"URL server"</string>
@@ -117,7 +112,7 @@
     <string name="summary_removeenv_preference">"Hapus lingkungan pengoperasian"</string>
     <string name="message_removeenv_confirm_dialog">"Hapus lingkungan operasi?"</string>
 
-    <string name="manage_preferences">"Pengelolaan"</string>
+    <string name="services_preferences">"Pengelolaan"</string>
     <!-- TELNET -->
     <string name="title_is_telnet_preference">"TELNET"</string>
     <string name="summary_is_telnet_preference">"Aktifkan daemon telnetd"</string>
@@ -311,6 +306,6 @@
     <string name="summary_fb_refresh_preference">"Paksa refresh framebuffer"</string>
 
     <string name="help_text">"\n<b>Bantuan</b>\n\nAplikasi ini untuk menginstal distribusi GNU/Linux yang dipilih dan menjalankannya dalam container chroot.\n\nProsedur:\n1. Dapatkan hak istimewa superuser (root).\n2. Periksa koneksi Internet.\n3. Tentukan pilihan instalasi.\n4. Jalankan instalasi (\"Menu =&gt; Install\").\n5. Tunggu sampai penginstalan selesai.\n6. Ketuk tombol \"START\" untuk menjalankan container.\n7. Sambungkan melalui CLI, SSH, VNC, atau lainnya.\n\nUntuk informasi lebih lanjut, lihat \"Tentang\"."</string>
-    <string name="about_text">"Aplikasi ini untuk menginstal distribusi GNU/Linux yang dipilih dan menjalankannya dalam container chroot.\n\nUntuk informasi lebih lanjut, lihat <a href="https://github.com/meefik/linuxdeploy">halaman project</a>, <a href="http://4pda.ru/forum/index.php?showtopic=378043">forum</a> atau <a href="http://meefik.ru">situs pengembang</a>.\n\n© 2012-2017 Anton Skshidlevsky, GPLv3"</string>
+    <string name="about_text">"Aplikasi ini untuk menginstal distribusi GNU/Linux yang dipilih dan menjalankannya dalam container chroot.\n\nUntuk informasi lebih lanjut, lihat <a href="https://github.com/meefik/linuxdeploy">halaman project</a>, <a href="http://4pda.ru/forum/index.php?showtopic=378043">forum</a> atau <a href="http://meefik.ru">situs pengembang</a>.\n\n© 2012-2019 Anton Skshidlevsky, GPLv3"</string>
 
 </resources>

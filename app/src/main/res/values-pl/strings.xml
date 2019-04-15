@@ -1,4 +1,3 @@
-<?xml version="1.0" encoding="utf-8"?>
 <resources>
 
     <string name="app_version">wersja %1$s</string>
@@ -33,7 +32,6 @@
     <string name="toast_import_profile_error">Błąd przy importowaniu profilu!</string>
     <string name="toast_export_profile_success">Profil został pomyślnie eksportowany.</string>
     <string name="toast_export_profile_error">Błąd przy eksportowaniu profilu!</string>
-    <string name="toast_terminal_error">Błąd podczas uruchamiania terminala!</string>
     <string name="confirm_profile_discard_title">Usuń profil</string>
     <string name="confirm_profile_discard_message">Usunąć wybrany profil?</string>
     <string name="new_mount_title">Punkt montowania</string>
@@ -59,8 +57,6 @@
     <string name="summary_appicon_preference">Wyświetl ikonę w pasku powiadomień</string>
     <string name="title_autostart_preference">Autostart</string>
     <string name="summary_autostart_preference">Automatycznie uruchom profil podczas włączania systemu</string>
-    <string name="title_terminalcmd_preference">Polecenie Terminalu</string>
-    <string name="dialog_title_terminalcmd_preference">Polecenie Terminalu</string>
     <string name="env_preferences">Środowisko operacyjne</string>
     <string name="title_path_preference">Katalog BusyBox</string>
     <string name="dialog_title_path_preference">PATH</string>
@@ -171,9 +167,9 @@
     <string name="title_fb_freeze_preference">Zatrzymaj Android UI</string>
     <string name="dialog_title_fb_freeze_preference">Zatrzymaj Android UI</string>
     <string name="help_text">\n<b>Pomoc</b>\n\nTa aplikacja instaluje wybraną dystrybucję GNU/Linux i uruchamia ją w środowisku chroot.\n\nProcedura:\n1. Zdobądź uprawnienia root.\n2. Sprawdź połączenie internetowe.\n3. Określ ustawienia instalacji.\n4. Rozpocznij instalację (\"Właściwości => Instaluj\").\n5. Poczekaj do zakończenia instalacji.\n6. Naciśnij przycisk \"URUCHOM\", aby uruchomić profil.\n7. Połącz się używając CLI, SSH, VNC lub innych.\n\nAby uzyskać więcej informacji zobacz \"O programie\".</string>
-    <string name="about_text">Ta aplikacja instaluje wybraną dystrybucję GNU/Linux i uruchamia ją w środowisku chroot.\n\nAby uzyskać więcej informacji zobacz <a href="https://github.com/meefik/linuxdeploy">stronę projektu</a>, <a href="http://4pda.ru/forum/index.php?showtopic=378043">forum</a> lub <a href="http://meefik.ru">stronę programisty</a>.\n\n&#169; 2012&#8211;2017 Anton Skshidlevsky, GPLv3</string>
+    <string name="about_text">Ta aplikacja instaluje wybraną dystrybucję GNU/Linux i uruchamia ją w środowisku chroot.\n\nAby uzyskać więcej informacji zobacz <a href="https://github.com/meefik/linuxdeploy">stronę projektu</a>, <a href="http://4pda.ru/forum/index.php?showtopic=378043">forum</a> lub <a href="http://meefik.ru">stronę programisty</a>.\n\n&#169; 2012&#8211;2019 Anton Skshidlevsky, GPLv3</string>
     <string name="nav_profiles">Profile</string>
-    <string name="manage_preferences">Zarządzanie</string>
+    <string name="services_preferences">Zarządzanie</string>
     <string name="title_configure_dialog">Konfiguruj</string>
     <string name="gui_preferences">GUI</string>
     <string name="repository_purchase_button">Kupować</string>

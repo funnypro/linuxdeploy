@@ -13,12 +13,11 @@ class SettingsStore extends ParamUtils {
 
     @Override
     public String fixOutputParam(Context c, String key, String value) {
-         return value;
+        return value;
     }
 
     @Override
     public String fixInputParam(Context c, String key, String value) {
         return value;
     }
-
 }

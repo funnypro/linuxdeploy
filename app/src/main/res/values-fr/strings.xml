@@ -1,4 +1,3 @@
-<?xml version="1.0" encoding="utf-8"?>
 <resources>
 
     <string name="app_version">version %1$s</string>
@@ -81,7 +80,7 @@
     <string name="vnc_preferences">VNC</string>
     <string name="fb_preferences">Tampon de trame</string>
     <string name="help_text">\n<b>Help</b><![CDATA[\n\nThis application installs the selected GNU/Linux distribution and executes it in a chroot-container.\n\nProcedure:\n1. Get superuser privileges (root).\n2. Check the connection to Internet.\n3. Specify the installation options.\n4. Start the installation (\"Menu => Install\").\n5. Wait until the installation is complete.\n6. Tap \"START\" button to run the container.\n7. Connect to the container through CLI, SSH, VNC, or others.\n\nFor more information, see \"About\".]]></string>
-    <string name="about_text">This application installs the selected GNU/Linux distribution and executes it in a chroot-container.\n\nFor more information see <a href="https://github.com/meefik/linuxdeploy">project page</a>, <a href="http://4pda.ru/forum/index.php?showtopic=378043">forum</a> or <a href="http://meefik.ru">developer site</a>.\n\n© 2012–2017 Anton Skshidlevsky, GPLv3</string>
+    <string name="about_text">This application installs the selected GNU/Linux distribution and executes it in a chroot-container.\n\nFor more information see <a href="https://github.com/meefik/linuxdeploy">project page</a>, <a href="http://4pda.ru/forum/index.php?showtopic=378043">forum</a> or <a href="http://meefik.ru">developer site</a>.\n\n© 2012–2019 Anton Skshidlevsky, GPLv3</string>
     <string name="menu_configure">Configurer</string>
     <string name="menu_install">Installer</string>
     <string name="summary_debug_mode_preference">Affiche les informations de débugage</string>
@@ -152,7 +151,7 @@
     <string name="dialog_title_target_type_preference">Type d\'installation</string>
     <string name="dialog_title_env_dir_preference">Dossier ENV</string>
     <string name="dialog_title_arch_preference">Architecture</string>
-    <string name="manage_preferences">La gestion</string>
+    <string name="services_preferences">La gestion</string>
     <string name="dialog_title_vnc_args_preference">VNC: options du serveur VNC</string>
     <string name="dialog_title_vnc_depth_preference">VNC: profondeur (bits)</string>
     <string name="dialog_title_vnc_display_preference">VNC: numéro de l\'affichage</string>

@@ -18,7 +18,6 @@ import java.io.InputStreamReader;
 import java.io.OutputStream;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
 
 class EnvUtils {
 
@@ -125,17 +124,19 @@ class EnvUtils {
      *
      * @param path path to directory
      */
-    private static void setPermissions(File path) {
+    private static void setPermissions(File path, Boolean executable) {
         if (path == null) return;
         if (path.exists()) {
             path.setReadable(true, false);
-            path.setExecutable(true, false);
-            File[] list = path.listFiles();
-            if (list == null) return;
-            for (File f : list) {
-                if (f.isDirectory()) setPermissions(f);
-                f.setReadable(true, false);
-                f.setExecutable(true, false);
+            if (path.isDirectory()) {
+                path.setExecutable(true, false);
+                File[] list = path.listFiles();
+                if (list == null) return;
+                for (File f : list) {
+                    setPermissions(f, executable);
+                }
+            } else {
+                path.setExecutable(executable, false);
             }
         }
     }
@@ -199,7 +200,7 @@ class EnvUtils {
      */
     private static boolean setVersion(Context c) {
         boolean result = false;
-        String f = PrefStore.getDataDir(c) + "/version";
+        String f = PrefStore.getEnvDir(c) + "/version";
         BufferedWriter bw = null;
         try {
             bw = new BufferedWriter(new FileWriter(f));
@@ -220,7 +221,7 @@ class EnvUtils {
      * @return true if success
      */
     static boolean isLatestVersion(Context c) {
-        File f = new File(PrefStore.getDataDir(c) + "/version");
+        File f = new File(PrefStore.getEnvDir(c) + "/version");
         if (!f.exists()) return false;
         boolean result = false;
         BufferedReader br = null;
@@ -232,43 +233,6 @@ class EnvUtils {
             e.printStackTrace();
         } finally {
             close(br);
-        }
-        return result;
-    }
-
-    /**
-     * Remove version file
-     *
-     * @param c context
-     * @return true if success
-     */
-    private static boolean resetVersion(Context c) {
-        File f = new File(PrefStore.getDataDir(c) + "/version");
-        return f.delete();
-    }
-
-    /**
-     * Make linuxdeploy script
-     *
-     * @param c context
-     * @return true if success
-     */
-    private static boolean makeScript(Context c) {
-        boolean result = false;
-        String scriptFile = PrefStore.getBinDir(c) + "/linuxdeploy";
-        BufferedWriter bw = null;
-        try {
-            bw = new BufferedWriter(new FileWriter(scriptFile));
-            bw.write("#!" + PrefStore.getShell(c) + "\n");
-            bw.write("PATH=" + PrefStore.getPath(c) + ":$PATH\n");
-            bw.write("ENV_DIR=\"" + PrefStore.getEnvDir(c) + "\"\n");
-            bw.write("TEMP_DIR=\"" + PrefStore.getTmpDir(c) + "\"\n");
-            bw.write(". \"${ENV_DIR}/cli.sh\"\n");
-            result = true;
-        } catch (IOException e) {
-            e.printStackTrace();
-        } finally {
-            close(bw);
         }
         return result;
     }
@@ -293,7 +257,6 @@ class EnvUtils {
         }
         boolean result = false;
         OutputStream stdin = null;
-        InputStream stdout;
         try {
             ProcessBuilder pb = new ProcessBuilder(shell);
             pb.directory(new File(PrefStore.getEnvDir(c)));
@@ -303,8 +266,10 @@ class EnvUtils {
             Process process = pb.start();
 
             stdin = process.getOutputStream();
-            stdout = process.getInputStream();
+            final InputStream stdout = process.getInputStream();
+//            final InputStream stderr = process.getErrorStream();
 
+//            params.add(0, "LD_LIBRARY_PATH=" + PrefStore.getLibsDir(c) + ":$LD_LIBRARY_PATH");
             params.add(0, "PATH=" + PrefStore.getBinDir(c) + ":$PATH");
             if (PrefStore.isTraceMode(c)) params.add(0, "set -x");
             params.add("exit $?");
@@ -322,12 +287,10 @@ class EnvUtils {
                 close(os);
             }
 
-            // show stdout log
-            final InputStream out = stdout;
             (new Thread() {
                 @Override
                 public void run() {
-                    Logger.log(c, out);
+                    Logger.log(c, stdout);
                 }
             }).start();
 
@@ -348,31 +311,37 @@ class EnvUtils {
      * @return true if success
      */
     static boolean updateEnv(final Context c) {
-        // stop telnetd
-        execService(c, "telnetd", "stop");
-        //stop httpd
-        execService(c, "httpd", "stop");
+        // stop services
+        execServices(c, new String[]{"telnetd", "httpd"}, "stop");
+
+        // extract env assets
+        if (!extractDir(c, PrefStore.getEnvDir(c), "env", "")) return false;
 
         // extract bin assets
         if (!extractDir(c, PrefStore.getBinDir(c), "bin/all", "")) return false;
         if (!extractDir(c, PrefStore.getBinDir(c), "bin/" + PrefStore.getArch(), "")) return false;
 
-        // extract env assets
-        if (!extractDir(c, PrefStore.getEnvDir(c), "env", "")) return false;
-
         // extract web assets
         if (!extractDir(c, PrefStore.getWebDir(c), "web", "")) return false;
 
         // make linuxdeploy script
-        if (!makeScript(c)) return false;
+        if (!makeMainScript(c)) return false;
 
-        // make tmp directory
-        File tmpDir = new File(PrefStore.getTmpDir(c));
-        tmpDir.mkdirs();
+        // set executable bin directory
+        File binDir = new File(PrefStore.getBinDir(c));
+        setPermissions(binDir, true);
+
+        // set executable cgi-bin directory
+        File cgiDir = new File(PrefStore.getWebDir(c) + "/cgi-bin");
+        setPermissions(cgiDir, true);
 
         // make config directory
         File configDir = new File(PrefStore.getConfigDir(c));
         configDir.mkdirs();
+
+        // make tmp directory
+        File tmpDir = new File(PrefStore.getTmpDir(c));
+        tmpDir.mkdirs();
 
         // create .nomedia
         File noMedia = new File(PrefStore.getEnvDir(c) + "/.nomedia");
@@ -381,15 +350,19 @@ class EnvUtils {
         } catch (IOException ignored) {
         }
 
-        // set permissions
-        File binDir = new File(PrefStore.getBinDir(c));
-        setPermissions(binDir);
-        File cgiDir = new File(PrefStore.getWebDir(c) + "/cgi-bin");
-        setPermissions(cgiDir);
-
-        // install applets
         List<String> params = new ArrayList<>();
+        // install busybox applets
         params.add("busybox --install -s " + PrefStore.getBinDir(c));
+        // replace shell interpreter in some scripts
+        String[] scripts = {
+                PrefStore.getBinDir(c) + "/websocket.sh",
+                PrefStore.getWebDir(c) + "/cgi-bin/resize",
+                PrefStore.getWebDir(c) + "/cgi-bin/sync",
+                PrefStore.getWebDir(c) + "/cgi-bin/terminal"
+        };
+        for (String f : scripts) {
+            params.add("sed -i 's|^#!/.*|#!" + PrefStore.getShell(c) + "|' " + f);
+        }
         exec(c, "sh", params);
 
         // update cli.conf
@@ -404,12 +377,35 @@ class EnvUtils {
         // update version
         if (!setVersion(c)) return false;
 
-        // start telnetd
-        execService(c, "telnetd", "start");
-        //start httpd
-        execService(c, "httpd", "start");
+        // start services
+        execServices(c, new String[]{"telnetd", "httpd"}, "start");
 
         return true;
+    }
+
+    /**
+     * Make linuxdeploy script
+     *
+     * @param c context
+     * @return true if success
+     */
+    private static boolean makeMainScript(Context c) {
+        boolean result = false;
+        String scriptFile = PrefStore.getBinDir(c) + "/linuxdeploy";
+        BufferedWriter bw = null;
+        try {
+            bw = new BufferedWriter(new FileWriter(scriptFile));
+            bw.write("#!" + PrefStore.getShell(c) + "\n");
+            bw.write("PATH=" + PrefStore.getPath(c) + ":$PATH\n");
+            bw.write("ENV_DIR=\"" + PrefStore.getEnvDir(c) + "\"\n");
+            bw.write(". \"${ENV_DIR}/cli.sh\"\n");
+            result = true;
+        } catch (IOException e) {
+            e.printStackTrace();
+        } finally {
+            close(bw);
+        }
+        return result;
     }
 
     /**
@@ -420,10 +416,9 @@ class EnvUtils {
      */
     private static boolean makeSymlink(Context c) {
         List<String> params = new ArrayList<>();
-        params.add("rm -f /system/bin/linuxdeploy");
-        params.add("ln -s "
+        params.add("{ rm -f /system/bin/linuxdeploy; ln -s "
                 + PrefStore.getBinDir(c)
-                + "/linuxdeploy /system/bin/linuxdeploy || "
+                + "/linuxdeploy /system/bin/linuxdeploy; } 2>/dev/null || "
                 + "{ mount -o rw,remount /system; rm -f /system/bin/linuxdeploy; ln -s "
                 + PrefStore.getBinDir(c)
                 + "/linuxdeploy /system/bin/linuxdeploy; mount -o ro,remount /system; }");
@@ -439,7 +434,7 @@ class EnvUtils {
     private static boolean removeSymlink(Context c) {
         List<String> params = new ArrayList<>();
         params.add("if [ -e /system/bin/linuxdeploy ]; then "
-                + "rm -f /system/bin/linuxdeploy || "
+                + "rm -f /system/bin/linuxdeploy 2>/dev/null || "
                 + "{ mount -o rw,remount /system; rm -f /system/bin/linuxdeploy; mount -o ro,remount /system; };"
                 + "fi");
         return exec(c, "su", params);
@@ -452,34 +447,16 @@ class EnvUtils {
      * @return true if success
      */
     static boolean removeEnv(Context c) {
-        // remove version file
-        resetVersion(c);
-
-        // stop telnetd
-        execService(c, "telnetd", "stop");
-
-        //stop httpd
-        execService(c, "httpd", "stop");
+        // stop services
+        execServices(c, new String[]{"telnetd", "httpd"}, "stop");
 
         // remove symlink
         File ldSymlink = new File("/system/bin/linuxdeploy");
         if (ldSymlink.exists()) removeSymlink(c);
 
-        // clean web directory
-        File webDir = new File(PrefStore.getWebDir(c));
-        cleanDirectory(webDir);
-
         // clean env directory
         File envDir = new File(PrefStore.getEnvDir(c));
         cleanDirectory(envDir);
-
-        // clean tmp directory
-        File tmpDir = new File(PrefStore.getTmpDir(c));
-        cleanDirectory(tmpDir);
-
-        // clean bin directory
-        File binDir = new File(PrefStore.getBinDir(c));
-        cleanDirectory(binDir);
 
         return true;
     }
@@ -509,20 +486,34 @@ class EnvUtils {
     /**
      * Execute command via service
      *
-     * @param c context
-     * @param args command and arguments
+     * @param c    context
+     * @param cmd  command
+     * @param args arguments
      */
     static void execService(Context c, String cmd, String args) {
         Intent service = new Intent(c, ExecService.class);
         service.putExtra("cmd", cmd);
         service.putExtra("args", args);
-        c.startService(service);
+        ExecService.enqueueWork(c, service);
+    }
+
+    /**
+     * Execute commands via service
+     *
+     * @param c        context
+     * @param commands commands
+     * @param args     command and arguments
+     */
+    static void execServices(Context c, String[] commands, String args) {
+        for (String cmd : commands) {
+            execService(c, cmd, args);
+        }
     }
 
     /**
      * Start/stop telnetd daemon
      *
-     * @param c context
+     * @param c   context
      * @param cmd command: start, stop or restart
      * @return true if success
      */
@@ -536,13 +527,15 @@ class EnvUtils {
                 if (cmd.equals("stop")) break;
             case "start":
                 if (!PrefStore.isTelnet(c)) break;
+                makeIssueFile(c, PrefStore.getEnvDir(c) + "/issue");
                 String args = "";
                 args += " -l " + PrefStore.getShell(c);
                 args += " -p " + PrefStore.getTelnetPort(c);
-                args += " -f " + PrefStore.getWebDir(c) + "/issue";
+                args += " -f " + PrefStore.getEnvDir(c) + "/issue";
                 if (PrefStore.isTelnetLocalhost(c)) args += " -b 127.0.0.1";
                 params.add("pgrep telnetd >/dev/null && exit");
                 params.add("export TERM=\"xterm\"");
+                params.add("export PS1=\"\\$ \"");
                 params.add("export HOME=\"" + PrefStore.getEnvDir(c) + "\"");
                 params.add("cd \"$HOME\"");
                 params.add("telnetd" + args);
@@ -550,11 +543,10 @@ class EnvUtils {
         return params.size() > 0 && exec(c, "sh", params);
     }
 
-
     /**
      * Start/stop httpd daemon
      *
-     * @param c context
+     * @param c   context
      * @param cmd command: start, stop or restart
      * @return true if success
      */
@@ -568,14 +560,13 @@ class EnvUtils {
                 if (cmd.equals("stop")) break;
             case "start":
                 if (!PrefStore.isHttp(c)) break;
-                File conf = PrefStore.getHttpConfFile(c);
-                EnvUtils.makeHttpdConf(c, conf);
+                makeHttpdConf(c, PrefStore.getEnvDir(c) + "/httpd.conf");
                 params.add("pgrep httpd >/dev/null && exit");
                 params.add("export WS_SHELL=\"telnet 127.0.0.1 " + PrefStore.getTelnetPort(c) + "\"");
                 params.add("export ENV_DIR=\"" + PrefStore.getEnvDir(c) + "\"");
                 params.add("export HOME=\"" + PrefStore.getEnvDir(c) + "\"");
                 params.add("cd " + PrefStore.getWebDir(c));
-                params.add("httpd " + " -p " + PrefStore.getHttpPort(c) + " -c " + conf);
+                params.add("httpd " + " -p " + PrefStore.getHttpPort(c) + " -c " + PrefStore.getEnvDir(c) + "/httpd.conf");
         }
         return params.size() > 0 && exec(c, "sh", params);
     }
@@ -586,12 +577,12 @@ class EnvUtils {
      * @param c context
      * @return true if success
      */
-    private static boolean makeHttpdConf(Context c, File conf) {
+    private static boolean makeHttpdConf(Context c, String f) {
         boolean result = false;
         BufferedWriter bw = null;
         try {
-            bw = new BufferedWriter(new FileWriter(conf));
-            for(String part: PrefStore.getHttpConf(c).split(" ")) {
+            bw = new BufferedWriter(new FileWriter(f));
+            for (String part : PrefStore.getHttpConf(c).split(" ")) {
                 bw.write(part + "\n");
             }
             result = true;
@@ -603,4 +594,24 @@ class EnvUtils {
         return result;
     }
 
+    /**
+     * Make issue file
+     *
+     * @param c context
+     * @return true if success
+     */
+    private static boolean makeIssueFile(Context c, String f) {
+        boolean result = false;
+        BufferedWriter bw = null;
+        try {
+            bw = new BufferedWriter(new FileWriter(f));
+            bw.write("Linux Deploy \\m \\l\n");
+            result = true;
+        } catch (IOException e) {
+            e.printStackTrace();
+        } finally {
+            close(bw);
+        }
+        return result;
+    }
 }

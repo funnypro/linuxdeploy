@@ -1,4 +1,3 @@
-<?xml version="1.0" encoding="utf-8"?>
 <resources>
 
     <string name="app_version">versão %1$s</string>
@@ -33,7 +32,6 @@
     <string name="toast_import_profile_error">Erro ao importar perfil!</string>
     <string name="toast_export_profile_success">Perfil exportado com sucesso.</string>
     <string name="toast_export_profile_error">Erro ao exportar perfil!</string>
-    <string name="toast_terminal_error">Error when starting the terminal!</string>
     <string name="confirm_profile_discard_title">Remover perfil</string>
     <string name="confirm_profile_discard_message">Remover o perfil selecionado?</string>
     <string name="new_mount_title">Ponto de montagem</string>
@@ -59,8 +57,6 @@
     <string name="summary_appicon_preference">Mostrar ícone na barra de notificação</string>
     <string name="title_autostart_preference">Inicio automático</string>
     <string name="summary_autostart_preference">Executar automaticamente o GNU/Linux ao iniciar o Android</string>
-    <string name="title_terminalcmd_preference">Terminal command</string>
-    <string name="dialog_title_terminalcmd_preference">Terminal command</string>
     <string name="env_preferences">Ambiente de operação</string>
     <string name="title_path_preference">Diretório do BusyBox</string>
     <string name="dialog_title_path_preference">Diretório do BusyBox</string>
@@ -171,10 +167,11 @@
     <string name="title_fb_freeze_preference">Congelar UI do Android</string>
     <string name="dialog_title_fb_freeze_preference">Congelar UI do Android</string>
     <string name="help_text">\n<b>Ajuda</b>\n\nEssa aplicação instala a distribuição GNU/Linux selecionada e a executa em um container chroot.\n\nProcesso:\n1. Conseguir privilégios de super-usuário (root).\n2. Instalar <a href="https://play.google.com/store/apps/details?id=ru.meefik.busybox">BusyBox</a>.\n3. Verificar conexão com a Internet.\n4. Especificar as opções da instalação.\n5. Iniciar a instalação (\"Propriedades => Instalar\").\n6. Esperar até que a instalação seja concluída.\n7. Apertar o botão \"INICIAR\" para executar o container.\n8. Conectar ao container através de CLI, SSH, VNC ou outros.\n\nPara mais informações, veja \"Sobre\".</string>
-    <string name="about_text">Essa aplicação instala a distribuição GNU/Linux e a executa em um container chroot.\n\nPara mais informações veja <a href="https://github.com/meefik/linuxdeploy">página do projeto</a>, <a href="http://4pda.ru/forum/index.php?showtopic=378043">fórum</a> ou <a href="http://meefik.ru">site do desenvolvedor</a>.\n\n&#169; 2012&#8211;2017 Anton Skshidlevsky, GPLv3</string>
-    <string name="manage_preferences">Gestão</string>
+    <string name="about_text">Essa aplicação instala a distribuição GNU/Linux e a executa em um container chroot.\n\nPara mais informações veja <a href="https://github.com/meefik/linuxdeploy">página do projeto</a>, <a href="http://4pda.ru/forum/index.php?showtopic=378043">fórum</a> ou <a href="http://meefik.ru">site do desenvolvedor</a>.\n\n&#169; 2012&#8211;2019 Anton Skshidlevsky, GPLv3</string>
+    <string name="services_preferences">Gestão</string>
     <string name="title_configure_dialog">Configurar</string>
     <string name="gui_preferences">GUI</string>
     <string name="repository_purchase_button">Comprar</string>
+    <string name="nav_profiles">Perfis</string>
 
 </resources>

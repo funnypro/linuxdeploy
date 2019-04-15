@@ -1,10 +1,7 @@
 package ru.meefik.linuxdeploy;
 
-import android.content.Context;
 import android.content.DialogInterface;
 import android.os.Bundle;
-import android.support.v7.app.AlertDialog;
-import android.support.v7.app.AppCompatActivity;
 import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuItem;
@@ -12,6 +9,7 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
+import android.widget.Button;
 import android.widget.EditText;
 import android.widget.ListView;
 import android.widget.TextView;
@@ -19,67 +17,82 @@ import android.widget.TextView;
 import java.util.ArrayList;
 import java.util.List;
 
+import androidx.appcompat.app.AlertDialog;
+import androidx.appcompat.app.AppCompatActivity;
+
 public class MountsActivity extends AppCompatActivity {
 
     private List<String> listItems = new ArrayList<>();
     private ArrayAdapter adapter;
 
     private void addDialog() {
-        final EditText input = new EditText(this);
+        LayoutInflater layoutInflater = LayoutInflater.from(this);
+        View view = layoutInflater.inflate(R.layout.properties_mounts, null);
+        final EditText inputSrc = view.findViewById(R.id.editTextSrc);
+        final EditText inputTarget = view.findViewById(R.id.editTextTarget);
         new AlertDialog.Builder(this)
                 .setTitle(R.string.new_mount_title)
-                .setView(input, 16, 32, 16, 0)
+                .setView(view)
                 .setPositiveButton(android.R.string.ok,
-                        new DialogInterface.OnClickListener() {
-                            @Override
-                            public void onClick(DialogInterface dialog,
-                                                int whichButton) {
-                                String text = input.getText().toString()
-                                        .replaceAll(" ", "_");
-                                if (text.length() > 0) {
-                                    listItems.add(text);
-                                    adapter.notifyDataSetChanged();
+                        (dialog, whichButton) -> {
+                            String text = "";
+                            String src = inputSrc.getText().toString()
+                                    .replaceAll("[ :]", "_");
+                            String target = inputTarget.getText().toString()
+                                    .replaceAll("[ :]", "_");
+                            if (src.length() > 0) {
+                                text = src;
+                                if (target.length() > 0) {
+                                    text = text + ":" + target;
                                 }
                             }
+                            if (text.length() > 0) {
+                                listItems.add(text);
+                                adapter.notifyDataSetChanged();
+                            }
                         }).setNegativeButton(android.R.string.cancel,
-                new DialogInterface.OnClickListener() {
-                    @Override
-                    public void onClick(DialogInterface dialog,
-                                        int whichButton) {
-                        dialog.cancel();
-                    }
-                }).show();
+                (dialog, whichButton) -> dialog.cancel()).show();
     }
 
     private void editDialog(final int position) {
-        final EditText input = new EditText(this);
+        LayoutInflater layoutInflater = LayoutInflater.from(this);
+        View view = layoutInflater.inflate(R.layout.properties_mounts, null);
+        final EditText inputSrc = view.findViewById(R.id.editTextSrc);
+        final EditText inputTarget = view.findViewById(R.id.editTextTarget);
         if (position >= 0 && position < listItems.size()) {
-            input.setText(listItems.get(position));
-            input.setSelection(input.getText().length());
+            String text = listItems.get(position);
+            final String[] arr = text.split(":", 2);
+            try {
+                inputSrc.setText(arr[0]);
+                inputSrc.setSelection(arr[0].length());
+
+                inputTarget.setText(arr[1]);
+                inputTarget.setSelection(arr[1].length());
+            } catch (IndexOutOfBoundsException ignored) {
+            }
+
             new AlertDialog.Builder(this)
                     .setTitle(R.string.edit_mount_title)
-                    .setView(input, 16, 32, 16, 0)
+                    .setView(view)
                     .setPositiveButton(android.R.string.ok,
-                            new DialogInterface.OnClickListener() {
-                                @Override
-                                public void onClick(DialogInterface dialog,
-                                                    int whichButton) {
-                                    String text = input.getText()
-                                            .toString()
-                                            .replaceAll(" ", "_");
-                                    if (text.length() > 0) {
-                                        listItems.set(position, text);
-                                        adapter.notifyDataSetChanged();
+                            (dialog, whichButton) -> {
+                                String text1 = "";
+                                String src = inputSrc.getText().toString()
+                                        .replaceAll("[ :]", "_");
+                                String target = inputTarget.getText().toString()
+                                        .replaceAll("[ :]", "_");
+                                if (src.length() > 0) {
+                                    text1 = src;
+                                    if (target.length() > 0) {
+                                        text1 = text1 + ":" + target;
                                     }
                                 }
+                                if (text1.length() > 0) {
+                                    listItems.set(position, text1);
+                                    adapter.notifyDataSetChanged();
+                                }
                             }).setNegativeButton(android.R.string.cancel,
-                    new DialogInterface.OnClickListener() {
-                        @Override
-                        public void onClick(DialogInterface dialog,
-                                            int whichButton) {
-                            dialog.cancel();
-                        }
-                    }).show();
+                    (dialog, whichButton) -> dialog.cancel()).show();
         }
     }
 
@@ -91,21 +104,11 @@ public class MountsActivity extends AppCompatActivity {
                     .setIcon(android.R.drawable.ic_dialog_alert)
                     .setCancelable(false)
                     .setPositiveButton(android.R.string.yes,
-                            new DialogInterface.OnClickListener() {
-                                @Override
-                                public void onClick(DialogInterface dialog,
-                                                    int whichButton) {
-                                    listItems.remove(position);
-                                    adapter.notifyDataSetChanged();
-                                }
+                            (dialog, whichButton) -> {
+                                listItems.remove(position);
+                                adapter.notifyDataSetChanged();
                             }).setNegativeButton(android.R.string.no,
-                    new DialogInterface.OnClickListener() {
-                        @Override
-                        public void onClick(DialogInterface dialog,
-                                            int whichButton) {
-                            dialog.cancel();
-                        }
-                    }).show();
+                    (dialog, whichButton) -> dialog.cancel()).show();
         }
     }
 
@@ -116,31 +119,23 @@ public class MountsActivity extends AppCompatActivity {
         setContentView(R.layout.activity_mounts);
 
         // ListView Adapter
-        ListView listView = (ListView) findViewById(R.id.mountsView);
-        adapter = new ArrayAdapter<String>(this, R.layout.mounts_row, listItems) {
+        ListView listView = findViewById(R.id.mountsView);
+        adapter = new ArrayAdapter<String>(this, R.layout.mounts_row, R.id.mount_point, listItems) {
             @Override
-            public View getView(final int position, View view, final ViewGroup parent) {
-                if (view == null) {
-                    LayoutInflater inflater = (LayoutInflater) getApplicationContext().
-                            getSystemService(Context.LAYOUT_INFLATER_SERVICE);
-                    view = inflater.inflate(R.layout.mounts_row, null);
-                }
+            public View getView(final int position, View convertView, final ViewGroup parent) {
+                View view = super.getView(position, convertView, parent);
+                TextView tv = view.findViewById(R.id.mount_point);
+                Button btn = view.findViewById(R.id.delete_mount);
+
                 String item = getItem(position);
+                tv.setText(item);
 
-                ((TextView) view.findViewById(R.id.mount_point)).setText(item);
-
-                view.findViewById(R.id.mount_point).setOnClickListener(new View.OnClickListener() {
-                    @Override
-                    public void onClick(View v) {
-                        ((ListView) parent).performItemClick(v, position, 0); // Let the event be handled in onItemClick()
-                    }
+                tv.setOnClickListener(v -> {
+                    ((ListView) parent).performItemClick(v, position, 0); // Let the event be handled in onItemClick()
                 });
 
-                view.findViewById(R.id.delete_mount).setOnClickListener(new View.OnClickListener() {
-                    @Override
-                    public void onClick(View v) {
-                        ((ListView) parent).performItemClick(v, position, 0); // Let the event be handled in onItemClick()
-                    }
+                btn.setOnClickListener(v -> {
+                    ((ListView) parent).performItemClick(v, position, 0); // Let the event be handled in onItemClick()
                 });
 
                 return view;
@@ -149,12 +144,10 @@ public class MountsActivity extends AppCompatActivity {
         listView.setAdapter(adapter);
 
         // Click listener
-        listView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
-            public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
-                long viewId = view.getId();
-                if (viewId == R.id.delete_mount) deleteDialog(position);
-                else editDialog(position);
-            }
+        listView.setOnItemClickListener((parent, view, position, id) -> {
+            long viewId = view.getId();
+            if (viewId == R.id.delete_mount) deleteDialog(position);
+            else editDialog(position);
         });
     }
 
